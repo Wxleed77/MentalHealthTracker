@@ -36,6 +36,15 @@ interface MoodEntry {
   created_at: string;
 }
 
+// Journal Entry Type
+interface JournalEntry {
+  id: string;
+  user_id: string;
+  content: string;
+  ai_insight: string | null;
+  created_at: string;
+}
+
 // --- Main App Component (Home) ---
 const Home = () => {
   const [currentView, setCurrentView] = useState<'landing' | 'login' | 'dashboard'>('landing');
@@ -242,11 +251,11 @@ const DashboardPage: React.FC<DashboardPageProps> = ({ user, onLogout }) => {
   const renderTabContent = () => {
     switch (activeTab) {
       case 'mood':
-        return <MoodTrackerTab userId={user.id} />; // Pass userId to MoodTrackerTab
+        return <MoodTrackerTab userId={user.id} />;
       case 'journal':
-        return <JournalTab userId={user.id} />; // Pass userId to JournalTab
+        return <JournalTab userId={user.id} />;
       case 'insights':
-        return <InsightsTab userId={user.id} />; // Pass userId to InsightsTab
+        return <InsightsTab userId={user.id} />;
       case 'resources':
         return <ResourcesTab />;
       default:
@@ -316,27 +325,28 @@ const MoodTrackerTab: React.FC<MoodTrackerTabProps> = ({ userId }) => {
 
   const moods = ['😊 Happy', '😐 Neutral', '😔 Sad', '😠 Angry', '😟 Anxious', '😌 Calm'];
 
+  // Function to fetch mood entries
+  const fetchMoodEntries = async () => {
+    setIsLoadingMoods(true);
+    const { data, error } = await supabase
+      .from('mood_entries')
+      .select('*')
+      .eq('user_id', userId)
+      .order('created_at', { ascending: false })
+      .limit(7);
+
+    if (error) {
+      console.error('Error fetching mood entries:', error);
+      setMessage('Failed to load mood history.');
+    } else {
+      setMoodEntries(data || []);
+    }
+    setIsLoadingMoods(false);
+  };
+
   // Fetch mood entries on component mount and when userId changes
   useEffect(() => {
-    const fetchMoodEntries = async () => {
-      setIsLoadingMoods(true);
-      const { data, error } = await supabase
-        .from('mood_entries')
-        .select('*')
-        .eq('user_id', userId)
-        .order('created_at', { ascending: false }) // Order by most recent
-        .limit(7); // Show last 7 days for example
-
-      if (error) {
-        console.error('Error fetching mood entries:', error);
-        setMessage('Failed to load mood history.');
-      } else {
-        setMoodEntries(data || []);
-      }
-      setIsLoadingMoods(false);
-    };
-
-    if (userId) { // Only fetch if userId is available
+    if (userId) {
       fetchMoodEntries();
     }
   }, [userId]);
@@ -360,7 +370,7 @@ const MoodTrackerTab: React.FC<MoodTrackerTabProps> = ({ userId }) => {
         .insert({
           user_id: userId,
           mood: selectedMood,
-          note: moodNote.trim() === '' ? null : moodNote.trim(), // Store null if note is empty
+          note: moodNote.trim() === '' ? null : moodNote.trim(),
         });
 
       if (error) {
@@ -368,20 +378,9 @@ const MoodTrackerTab: React.FC<MoodTrackerTabProps> = ({ userId }) => {
       }
 
       setMessage('Mood saved successfully!');
-      setSelectedMood(null); // Reset mood selection
-      setMoodNote(''); // Clear note
-      // Re-fetch moods to update the list immediately
-      const { data, error: fetchError } = await supabase
-        .from('mood_entries')
-        .select('*')
-        .eq('user_id', userId)
-        .order('created_at', { ascending: false })
-        .limit(7);
-
-      if (!fetchError) {
-        setMoodEntries(data || []);
-      }
-
+      setSelectedMood(null);
+      setMoodNote('');
+      fetchMoodEntries(); // Re-fetch to update the list
     } catch (error: unknown) {
       let errorMessage = 'Failed to save mood.';
       if (error instanceof Error) {
@@ -396,7 +395,36 @@ const MoodTrackerTab: React.FC<MoodTrackerTabProps> = ({ userId }) => {
     }
   };
 
-  // Helper to format date for display
+  const handleDeleteMood = async (id: string) => {
+    if (!confirm('Are you sure you want to delete this mood entry?')) { // Using confirm for simplicity, replace with custom modal later
+      return;
+    }
+
+    setMessage('');
+    try {
+      const { error } = await supabase
+        .from('mood_entries')
+        .delete()
+        .eq('id', id)
+        .eq('user_id', userId); // Ensure only the owner can delete
+
+      if (error) {
+        throw error;
+      }
+      setMessage('Mood entry deleted successfully!');
+      fetchMoodEntries(); // Re-fetch to update the list
+    } catch (error: unknown) {
+      let errorMessage = 'Failed to delete mood entry.';
+      if (error instanceof Error) {
+        errorMessage = error.message;
+      } else if (typeof error === 'object' && error !== null && 'message' in error) {
+        errorMessage = (error as { message: string }).message;
+      }
+      console.error('Error deleting mood entry:', errorMessage);
+      setMessage(`Error: ${errorMessage}`);
+    }
+  };
+
   const formatDate = (dateString: string) => {
     const options: Intl.DateTimeFormatOptions = { year: 'numeric', month: 'long', day: 'numeric' };
     return new Date(dateString).toLocaleDateString(undefined, options);
@@ -431,7 +459,7 @@ const MoodTrackerTab: React.FC<MoodTrackerTabProps> = ({ userId }) => {
         <textarea
           id="moodNote"
           rows={3}
-          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500 transition duration-200"
+          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500 transition duration-200 text-gray-800 placeholder-gray-500" // Added text-gray-800 and placeholder-gray-500
           placeholder="What's on your mind? (e.g., 'Had a great day at work!')"
           value={moodNote}
           onChange={(e) => setMoodNote(e.target.value)}
@@ -470,9 +498,20 @@ const MoodTrackerTab: React.FC<MoodTrackerTabProps> = ({ userId }) => {
         ) : (
           <div className="space-y-3">
             {moodEntries.map((entry) => (
-              <div key={entry.id} className="bg-gray-50 p-4 rounded-lg shadow-sm border border-gray-200">
-                <p className="text-gray-800 font-medium">{entry.mood} on {formatDate(entry.created_at)}</p>
-                {entry.note && <p className="text-gray-600 text-sm mt-1">Note: {entry.note}</p>}
+              <div key={entry.id} className="bg-gray-50 p-4 rounded-lg shadow-sm border border-gray-200 flex justify-between items-center">
+                <div>
+                  <p className="text-gray-800 font-medium">{entry.mood} on {formatDate(entry.created_at)}</p>
+                  {entry.note && <p className="text-gray-600 text-sm mt-1">Note: {entry.note}</p>}
+                </div>
+                <button
+                  onClick={() => handleDeleteMood(entry.id)}
+                  className="ml-4 bg-red-500 hover:bg-red-600 text-white p-2 rounded-full shadow-md transition-colors duration-200 flex items-center justify-center"
+                  title="Delete Mood Entry"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                    <path fillRule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 011-1h4a1 1 0 110 2H8a1 1 0 01-1-1zm2 3a1 1 0 011-1h4a1 1 0 110 2H10a1 1 0 01-1-1zm-2 3a1 1 0 011-1h4a1 1 0 110 2H8a1 1 0 01-1-1z" clipRule="evenodd" />
+                  </svg>
+                </button>
               </div>
             ))}
           </div>
@@ -494,35 +533,27 @@ const JournalTab: React.FC<JournalTabProps> = ({ userId }) => {
   const [journalEntries, setJournalEntries] = useState<JournalEntry[]>([]);
   const [isLoadingJournals, setIsLoadingJournals] = useState(true);
 
-  // Journal Entry Type
-  interface JournalEntry {
-    id: string;
-    user_id: string;
-    content: string;
-    ai_insight: string | null;
-    created_at: string;
-  }
+  // Function to fetch journal entries
+  const fetchJournalEntries = async () => {
+    setIsLoadingJournals(true);
+    const { data, error } = await supabase
+      .from('journal_entries')
+      .select('*')
+      .eq('user_id', userId)
+      .order('created_at', { ascending: false })
+      .limit(5);
+
+    if (error) {
+      console.error('Error fetching journal entries:', error);
+      setMessage('Failed to load journal history.');
+    } else {
+      setJournalEntries(data || []);
+    }
+    setIsLoadingJournals(false);
+  };
 
   // Fetch journal entries on component mount and when userId changes
   useEffect(() => {
-    const fetchJournalEntries = async () => {
-      setIsLoadingJournals(true);
-      const { data, error } = await supabase
-        .from('journal_entries')
-        .select('*')
-        .eq('user_id', userId)
-        .order('created_at', { ascending: false })
-        .limit(5); // Show last 5 journal entries
-
-      if (error) {
-        console.error('Error fetching journal entries:', error);
-        setMessage('Failed to load journal history.');
-      } else {
-        setJournalEntries(data || []);
-      }
-      setIsLoadingJournals(false);
-    };
-
     if (userId) {
       fetchJournalEntries();
     }
@@ -547,7 +578,7 @@ const JournalTab: React.FC<JournalTabProps> = ({ userId }) => {
         .insert({
           user_id: userId,
           content: journalContent.trim(),
-          ai_insight: null, // AI insight will be added later
+          ai_insight: null,
         });
 
       if (error) {
@@ -555,19 +586,8 @@ const JournalTab: React.FC<JournalTabProps> = ({ userId }) => {
       }
 
       setMessage('Journal entry saved successfully!');
-      setJournalContent(''); // Clear content
-
-      // Re-fetch journals to update the list immediately
-      const { data, error: fetchError } = await supabase
-        .from('journal_entries')
-        .select('*')
-        .eq('user_id', userId)
-        .order('created_at', { ascending: false })
-        .limit(5);
-
-      if (!fetchError) {
-        setJournalEntries(data || []);
-      }
+      setJournalContent('');
+      fetchJournalEntries(); // Re-fetch to update the list
 
     } catch (error: unknown) {
       let errorMessage = 'Failed to save journal entry.';
@@ -580,6 +600,36 @@ const JournalTab: React.FC<JournalTabProps> = ({ userId }) => {
       setMessage(`Error: ${errorMessage}`);
     } finally {
       setIsSubmittingJournal(false);
+    }
+  };
+
+  const handleDeleteJournal = async (id: string) => {
+    if (!confirm('Are you sure you want to delete this journal entry?')) { // Using confirm for simplicity, replace with custom modal later
+      return;
+    }
+
+    setMessage('');
+    try {
+      const { error } = await supabase
+        .from('journal_entries')
+        .delete()
+        .eq('id', id)
+        .eq('user_id', userId); // Ensure only the owner can delete
+
+      if (error) {
+        throw error;
+      }
+      setMessage('Journal entry deleted successfully!');
+      fetchJournalEntries(); // Re-fetch to update the list
+    } catch (error: unknown) {
+      let errorMessage = 'Failed to delete journal entry.';
+      if (error instanceof Error) {
+        errorMessage = error.message;
+      } else if (typeof error === 'object' && error !== null && 'message' in error) {
+        errorMessage = (error as { message: string }).message;
+      }
+      console.error('Error deleting journal entry:', errorMessage);
+      setMessage(`Error: ${errorMessage}`);
     }
   };
 
@@ -597,7 +647,7 @@ const JournalTab: React.FC<JournalTabProps> = ({ userId }) => {
         <textarea
           id="journalEntry"
           rows={8}
-          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500 transition duration-200"
+          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500 transition duration-200 text-gray-800 placeholder-gray-500" // Added text-gray-800 and placeholder-gray-500
           placeholder="What's on your mind today? How are you feeling?"
           value={journalContent}
           onChange={(e) => setJournalContent(e.target.value)}
@@ -636,15 +686,26 @@ const JournalTab: React.FC<JournalTabProps> = ({ userId }) => {
         ) : (
           <div className="space-y-4">
             {journalEntries.map((entry) => (
-              <div key={entry.id} className="bg-gray-50 p-4 rounded-lg shadow-sm border border-gray-200">
-                <p className="text-gray-800 font-medium text-sm mb-1">{formatDate(entry.created_at)}</p>
-                <p className="text-gray-700">{entry.content}</p>
-                {entry.ai_insight && (
-                  <div className="mt-2 p-3 bg-blue-50 rounded-md text-blue-800 text-sm border border-blue-200">
-                    <p className="font-semibold">AI Insight:</p>
-                    <p>{entry.ai_insight}</p>
-                  </div>
-                )}
+              <div key={entry.id} className="bg-gray-50 p-4 rounded-lg shadow-sm border border-gray-200 flex justify-between items-start">
+                <div>
+                  <p className="text-gray-800 font-medium text-sm mb-1">{formatDate(entry.created_at)}</p>
+                  <p className="text-gray-700">{entry.content}</p>
+                  {entry.ai_insight && (
+                    <div className="mt-2 p-3 bg-blue-50 rounded-md text-blue-800 text-sm border border-blue-200">
+                      <p className="font-semibold">AI Insight:</p>
+                      <p>{entry.ai_insight}</p>
+                    </div>
+                  )}
+                </div>
+                <button
+                  onClick={() => handleDeleteJournal(entry.id)}
+                  className="ml-4 bg-red-500 hover:bg-red-600 text-white p-2 rounded-full shadow-md transition-colors duration-200 flex items-center justify-center flex-shrink-0"
+                  title="Delete Journal Entry"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                    <path fillRule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 011-1h4a1 1 0 110 2H8a1 1 0 01-1-1zm2 3a1 1 0 011-1h4a1 1 0 110 2H10a1 1 0 01-1-1zm-2 3a1 1 0 011-1h4a1 1 0 110 2H8a1 1 0 01-1-1z" clipRule="evenodd" />
+                  </svg>
+                </button>
               </div>
             ))}
           </div>
@@ -655,7 +716,7 @@ const JournalTab: React.FC<JournalTabProps> = ({ userId }) => {
 };
 
 // Placeholder Tabs for Dashboard (unchanged from previous version)
-const InsightsTab: React.FC<MoodTrackerTabProps> = ({ userId }) => ( // Added userId prop
+const InsightsTab: React.FC<MoodTrackerTabProps> = ({ userId }) => (
   <div className="p-6">
     <h3 className="text-2xl font-semibold text-gray-800 mb-4">Your AI Insights</h3>
     <p className="text-gray-600">
