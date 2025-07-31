@@ -4,6 +4,12 @@ import React, { useState, useEffect } from 'react';
 import { supabase } from './utils/supabase'; // Assuming page.tsx is in src/app and utils is in src/app
 import { User } from '@supabase/supabase-js';
 
+// Import professional icons from lucide-react
+import {
+  Smile, Meh, Frown, Angry, CloudRain, Feather,
+  LogOut, Trash2, BookText, Zap, Leaf
+} from 'lucide-react';
+
 // --- Type Definitions ---
 
 type AppUser = User
@@ -146,17 +152,17 @@ const Home = () => {
 
 const LandingPage: React.FC<LandingPageProps> = ({ onLoginClick }) => {
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen bg-gradient-to-br from-blue-100 to-purple-100 p-4">
-      <div className="bg-white p-8 rounded-2xl shadow-xl max-w-md w-full text-center transform transition-all duration-300 hover:scale-105">
-        <h1 className="text-4xl font-extrabold text-indigo-700 mb-4">
+    <div className="flex flex-col items-center justify-center min-h-screen p-4" style={{ background: 'linear-gradient(135deg, #e3f2fd, #e8dffc)' }}>
+      <div className="relative bg-white/30 backdrop-blur-md p-10 rounded-3xl shadow-2xl max-w-lg w-full text-center transform transition-all duration-500 hover:scale-[1.02] border border-white/50">
+        <h1 className="text-5xl font-extrabold text-indigo-800 mb-4 drop-shadow-md">
           MindWell
         </h1>
-        <p className="text-lg text-gray-600 mb-8">
+        <p className="text-lg text-gray-700 mb-8 font-light leading-relaxed">
           Your personal AI-powered companion for mental well-being. Track your mood, journal your thoughts, and gain insights.
         </p>
         <button
           onClick={onLoginClick}
-          className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 px-6 rounded-xl shadow-lg transition-all duration-300 transform hover:-translate-y-1 focus:outline-none focus:ring-4 focus:ring-indigo-300"
+          className="relative bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 px-8 rounded-full shadow-lg transition-all duration-300 transform hover:-translate-y-1 focus:outline-none focus:ring-4 focus:ring-indigo-300 active:scale-95"
         >
           Get Started
         </button>
@@ -198,16 +204,16 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess, onBackToLanding }
   };
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen bg-gradient-to-br from-blue-100 to-purple-100 p-4">
-      <div className="bg-white p-8 rounded-2xl shadow-xl max-w-md w-full transform transition-all duration-300 hover:scale-105">
-        <h2 className="text-3xl font-bold text-indigo-700 mb-6 text-center">Login</h2>
+    <div className="flex flex-col items-center justify-center min-h-screen p-4" style={{ background: 'linear-gradient(135deg, #e3f2fd, #e8dffc)' }}>
+      <div className="relative bg-white/30 backdrop-blur-md p-10 rounded-3xl shadow-2xl max-w-lg w-full transform transition-all duration-500 hover:scale-[1.02] border border-white/50">
+        <h2 className="text-4xl font-extrabold text-indigo-700 mb-8 text-center drop-shadow-sm">Login</h2>
         <form onSubmit={handleLogin} className="space-y-6">
           <div>
             <label htmlFor="email" className="block text-gray-700 text-sm font-medium mb-2">Email Address</label>
             <input
               type="email"
               id="email"
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500 transition duration-200"
+              className="w-full px-5 py-3 border-2 border-white/50 bg-white/50 rounded-xl focus:ring-indigo-500 focus:border-indigo-500 transition duration-300 text-gray-800 placeholder-gray-500 shadow-inner"
               placeholder="you@example.com"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
@@ -217,7 +223,7 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess, onBackToLanding }
           </div>
           <button
             type="submit"
-            className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 px-6 rounded-xl shadow-lg transition-all duration-300 transform hover:-translate-y-1 focus:outline-none focus:ring-4 focus:ring-indigo-300 flex items-center justify-center"
+            className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 px-6 rounded-full shadow-lg transition-all duration-300 transform hover:-translate-y-1 focus:outline-none focus:ring-4 focus:ring-indigo-300 active:scale-95 flex items-center justify-center"
             disabled={isSending}
           >
             {isSending ? (
@@ -237,7 +243,7 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess, onBackToLanding }
         )}
         <button
           onClick={onBackToLanding}
-          className="mt-6 w-full text-indigo-600 hover:text-indigo-800 font-semibold py-2 px-4 rounded-xl transition-colors duration-200"
+          className="mt-6 w-full text-indigo-600 hover:text-indigo-800 font-semibold py-2 px-4 rounded-full transition-colors duration-200"
         >
           Back to Landing
         </button>
@@ -265,23 +271,24 @@ const DashboardPage: React.FC<DashboardPageProps> = ({ user, onLogout }) => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-purple-50 flex flex-col">
+    <div className="min-h-screen flex flex-col p-4" style={{ background: 'linear-gradient(135deg, #e3f2fd, #e8dffc)' }}>
       {/* Header */}
-      <header className="bg-white shadow-md p-4 flex justify-between items-center rounded-b-2xl">
-        <h1 className="text-2xl font-bold text-indigo-700">MindWell Dashboard</h1>
+      <header className="relative bg-white/30 backdrop-blur-md shadow-lg p-6 flex flex-col sm:flex-row justify-between items-center rounded-3xl border border-white/50 mb-4">
+        <h1 className="text-3xl font-extrabold text-indigo-800 mb-2 sm:mb-0 drop-shadow-sm">MindWell Dashboard</h1>
         <div className="flex items-center space-x-4">
-          <span className="text-gray-600">Welcome, {user?.email || 'User'}!</span>
+          <span className="text-gray-700 font-medium">Welcome, {user?.email?.split('@')[0] || 'User'}!</span>
           <button
             onClick={onLogout}
-            className="bg-red-500 hover:bg-red-600 text-white font-semibold py-2 px-4 rounded-xl shadow-md transition-colors duration-200"
+            className="bg-red-500 hover:bg-red-600 text-white font-semibold py-2 px-4 rounded-full shadow-lg transition-colors duration-200 flex items-center space-x-2 active:scale-95"
           >
-            Logout
+            <LogOut size={18} />
+            <span>Logout</span>
           </button>
         </div>
       </header>
 
       {/* Navigation Tabs */}
-      <nav className="bg-white shadow-sm p-2 flex justify-center space-x-4 rounded-t-2xl mt-4 mx-4">
+      <nav className="relative bg-white/30 backdrop-blur-md shadow-md p-2 flex flex-wrap justify-center space-x-2 rounded-full border border-white/50 mb-4">
         <TabButton label="Mood Tracker" isActive={activeTab === 'mood'} onClick={() => setActiveTab('mood')} />
         <TabButton label="Journal" isActive={activeTab === 'journal'} onClick={() => setActiveTab('journal')} />
         <TabButton label="Insights" isActive={activeTab === 'insights'} onClick={() => setActiveTab('insights')} />
@@ -289,7 +296,7 @@ const DashboardPage: React.FC<DashboardPageProps> = ({ user, onLogout }) => {
       </nav>
 
       {/* Main Content Area */}
-      <main className="flex-grow p-4 bg-white rounded-b-2xl mx-4 mb-4 shadow-lg">
+      <main className="flex-grow p-6 bg-white/30 backdrop-blur-md rounded-3xl shadow-xl border border-white/50">
         {renderTabContent()}
       </main>
     </div>
@@ -300,11 +307,11 @@ const TabButton: React.FC<TabButtonProps> = ({ label, isActive, onClick }) => {
   return (
     <button
       onClick={onClick}
-      className={`py-2 px-4 rounded-lg font-medium transition-colors duration-200 ${
-        isActive
-          ? 'bg-indigo-100 text-indigo-700 shadow-sm'
-          : 'text-gray-600 hover:bg-gray-100 hover:text-gray-800'
-      }`}
+      className={`py-2 px-6 rounded-full font-semibold transition-all duration-300 drop-shadow-sm active:scale-95
+        ${isActive
+          ? 'bg-indigo-600 text-white shadow-lg'
+          : 'bg-white/50 text-gray-700 hover:bg-white/70 hover:text-indigo-700'
+        }`}
     >
       {label}
     </button>
@@ -316,6 +323,15 @@ interface MoodTrackerTabProps {
   userId: string;
 }
 
+const moods = [
+  { label: 'Happy', icon: Smile, color: 'text-yellow-500' },
+  { label: 'Neutral', icon: Meh, color: 'text-gray-500' },
+  { label: 'Sad', icon: Frown, color: 'text-blue-500' },
+  { label: 'Angry', icon: Angry, color: 'text-red-500' },
+  { label: 'Anxious', icon: CloudRain, color: 'text-purple-500' },
+  { label: 'Calm', icon: Feather, color: 'text-green-500' },
+];
+
 const MoodTrackerTab: React.FC<MoodTrackerTabProps> = ({ userId }) => {
   const [selectedMood, setSelectedMood] = useState<string | null>(null);
   const [moodNote, setMoodNote] = useState('');
@@ -323,8 +339,6 @@ const MoodTrackerTab: React.FC<MoodTrackerTabProps> = ({ userId }) => {
   const [moodEntries, setMoodEntries] = useState<MoodEntry[]>([]);
   const [isLoadingMoods, setIsLoadingMoods] = useState(true);
   const [isSubmittingMood, setIsSubmittingMood] = useState(false);
-
-  const moods = ['😊 Happy', '😐 Neutral', '😔 Sad', '😠 Angry', '😟 Anxious', '😌 Calm'];
 
   // Function to fetch mood entries
   const fetchMoodEntries = async () => {
@@ -397,34 +411,34 @@ const MoodTrackerTab: React.FC<MoodTrackerTabProps> = ({ userId }) => {
   };
 
   const handleDeleteMood = async (id: string) => {
-    if (!confirm('Are you sure you want to delete this mood entry?')) {
-      return;
-    }
-
-    setMessage('');
-    try {
-      const { error } = await supabase
-        .from('mood_entries')
-        .delete()
-        .eq('id', id)
-        .eq('user_id', userId);
-
-      if (error) {
-        throw error;
+    // Replaced confirm with a custom modal UI in a real-world app, but maintaining logic as per user request
+    if (window.confirm('Are you sure you want to delete this mood entry?')) {
+      setMessage('');
+      try {
+        const { error } = await supabase
+          .from('mood_entries')
+          .delete()
+          .eq('id', id)
+          .eq('user_id', userId);
+  
+        if (error) {
+          throw error;
+        }
+        setMessage('Mood entry deleted successfully!');
+        fetchMoodEntries();
+      } catch (error: unknown) {
+        let errorMessage = 'Failed to delete mood entry.';
+        if (error instanceof Error) {
+          errorMessage = error.message;
+        } else if (typeof error === 'object' && error !== null && 'message' in error) {
+          errorMessage = (error as { message: string }).message;
+        }
+        console.error('Error deleting mood entry:', errorMessage);
+        setMessage(`Error: ${errorMessage}`);
       }
-      setMessage('Mood entry deleted successfully!');
-      fetchMoodEntries();
-    } catch (error: unknown) {
-      let errorMessage = 'Failed to delete mood entry.';
-      if (error instanceof Error) {
-        errorMessage = error.message;
-      } else if (typeof error === 'object' && error !== null && 'message' in error) {
-        errorMessage = (error as { message: string }).message;
-      }
-      console.error('Error deleting mood entry:', errorMessage);
-      setMessage(`Error: ${errorMessage}`);
     }
   };
+  
 
   const formatDate = (dateString: string) => {
     const options: Intl.DateTimeFormatOptions = { year: 'numeric', month: 'long', day: 'numeric' };
@@ -433,22 +447,22 @@ const MoodTrackerTab: React.FC<MoodTrackerTabProps> = ({ userId }) => {
 
   return (
     <div className="p-6">
-      <h3 className="text-2xl font-semibold text-gray-800 mb-4">Track Your Mood</h3>
+      <h3 className="text-2xl font-semibold text-gray-800 mb-6 drop-shadow-sm">How are you feeling today?</h3>
 
       {/* Mood Selection */}
       <div className="mb-6">
-        <p className="text-gray-700 font-medium mb-3">How are you feeling today?</p>
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
-          {moods.map((mood) => (
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-4">
+          {moods.map(({ label, icon: Icon, color }) => (
             <button
-              key={mood}
-              onClick={() => setSelectedMood(mood)}
-              className={`py-3 px-4 rounded-xl text-lg font-semibold transition-all duration-200 shadow-md
-                ${selectedMood === mood ? 'bg-indigo-600 text-white transform scale-105' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}`
+              key={label}
+              onClick={() => setSelectedMood(label)}
+              className={`flex flex-col items-center justify-center p-4 rounded-2xl text-lg font-semibold transition-all duration-300 shadow-md transform hover:scale-105 active:scale-95
+                ${selectedMood === label ? 'bg-indigo-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}`
               }
               disabled={isSubmittingMood}
             >
-              {mood}
+              <Icon size={36} className={`${selectedMood === label ? 'text-white' : color} mb-2`} />
+              <span>{label}</span>
             </button>
           ))}
         </div>
@@ -460,7 +474,7 @@ const MoodTrackerTab: React.FC<MoodTrackerTabProps> = ({ userId }) => {
         <textarea
           id="moodNote"
           rows={3}
-          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500 transition duration-200 text-gray-800 placeholder-gray-500"
+          className="w-full px-4 py-2 border-2 border-white/50 bg-white/50 rounded-xl focus:ring-indigo-500 focus:border-indigo-500 transition duration-300 text-gray-800 placeholder-gray-500 shadow-inner"
           placeholder="What's on your mind? (e.g., 'Had a great day at work!')"
           value={moodNote}
           onChange={(e) => setMoodNote(e.target.value)}
@@ -470,7 +484,7 @@ const MoodTrackerTab: React.FC<MoodTrackerTabProps> = ({ userId }) => {
 
       <button
         onClick={handleSubmitMood}
-        className="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-6 rounded-xl shadow-lg transition-all duration-300 transform hover:-translate-y-1 focus:outline-none focus:ring-4 focus:ring-green-300 flex items-center justify-center"
+        className="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-6 rounded-full shadow-lg transition-all duration-300 transform hover:-translate-y-1 focus:outline-none focus:ring-4 focus:ring-green-300 flex items-center justify-center active:scale-95"
         disabled={!selectedMood || isSubmittingMood}
       >
         {isSubmittingMood ? (
@@ -491,7 +505,7 @@ const MoodTrackerTab: React.FC<MoodTrackerTabProps> = ({ userId }) => {
 
       {/* Mood History */}
       <div className="mt-8">
-        <h4 className="text-xl font-semibold text-gray-800 mb-3">Your Recent Moods</h4>
+        <h4 className="text-xl font-semibold text-gray-800 mb-4 drop-shadow-sm">Your Recent Moods</h4>
         {isLoadingMoods ? (
           <p className="text-gray-500">Loading mood history...</p>
         ) : moodEntries.length === 0 ? (
@@ -499,19 +513,17 @@ const MoodTrackerTab: React.FC<MoodTrackerTabProps> = ({ userId }) => {
         ) : (
           <div className="space-y-3">
             {moodEntries.map((entry) => (
-              <div key={entry.id} className="bg-gray-50 p-4 rounded-lg shadow-sm border border-gray-200 flex justify-between items-center">
+              <div key={entry.id} className="relative bg-white/50 p-4 rounded-xl shadow-sm border border-white/50 flex justify-between items-center transition-all duration-200 hover:shadow-md">
                 <div>
                   <p className="text-gray-800 font-medium">{entry.mood} on {formatDate(entry.created_at)}</p>
                   {entry.note && <p className="text-gray-600 text-sm mt-1">Note: {entry.note}</p>}
                 </div>
                 <button
                   onClick={() => handleDeleteMood(entry.id)}
-                  className="ml-4 bg-red-500 hover:bg-red-600 text-white p-2 rounded-full shadow-md transition-colors duration-200 flex items-center justify-center"
+                  className="ml-4 bg-red-500 hover:bg-red-600 text-white p-2 rounded-full shadow-md transition-colors duration-200 flex items-center justify-center active:scale-95"
                   title="Delete Mood Entry"
                 >
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                    <path fillRule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 011-1h4a1 1 0 110 2H8a1 1 0 01-1-1zm2 3a1 1 0 011-1h4a1 1 0 110 2H10a1 1 0 01-1-1zm-2 3a1 1 0 011-1h4a1 1 0 110 2H8a1 1 0 01-1-1z" clipRule="evenodd" />
-                </svg>
+                  <Trash2 size={16} />
                 </button>
               </div>
             ))}
@@ -657,34 +669,34 @@ const JournalTab: React.FC<JournalTabProps> = ({ userId }) => {
   };
 
   const handleDeleteJournal = async (id: string) => {
-    if (!confirm('Are you sure you want to delete this journal entry?')) {
-      return;
-    }
-
-    setMessage('');
-    try {
-      const { error } = await supabase
-        .from('journal_entries')
-        .delete()
-        .eq('id', id)
-        .eq('user_id', userId);
-
-      if (error) {
-        throw error;
+    // Replaced confirm with a custom modal UI in a real-world app, but maintaining logic as per user request
+    if (window.confirm('Are you sure you want to delete this journal entry?')) {
+      setMessage('');
+      try {
+        const { error } = await supabase
+          .from('journal_entries')
+          .delete()
+          .eq('id', id)
+          .eq('user_id', userId);
+  
+        if (error) {
+          throw error;
+        }
+        setMessage('Journal entry deleted successfully!');
+        fetchJournalEntries();
+      } catch (error: unknown) {
+        let errorMessage = 'Failed to delete journal entry.';
+        if (error instanceof Error) {
+          errorMessage = error.message;
+        } else if (typeof error === 'object' && error !== null && 'message' in error) {
+          errorMessage = (error as { message: string }).message;
+        }
+        console.error('Error deleting journal entry:', errorMessage);
+        setMessage(`Error: ${errorMessage}`);
       }
-      setMessage('Journal entry deleted successfully!');
-      fetchJournalEntries();
-    } catch (error: unknown) {
-      let errorMessage = 'Failed to delete journal entry.';
-      if (error instanceof Error) {
-        errorMessage = error.message;
-      } else if (typeof error === 'object' && error !== null && 'message' in error) {
-        errorMessage = (error as { message: string }).message;
-      }
-      console.error('Error deleting journal entry:', errorMessage);
-      setMessage(`Error: ${errorMessage}`);
     }
   };
+  
 
   const formatDate = (dateString: string) => {
     const options: Intl.DateTimeFormatOptions = { year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' };
@@ -693,14 +705,14 @@ const JournalTab: React.FC<JournalTabProps> = ({ userId }) => {
 
   return (
     <div className="p-6">
-      <h3 className="text-2xl font-semibold text-gray-800 mb-4">Journal Your Thoughts</h3>
+      <h3 className="text-2xl font-semibold text-gray-800 mb-6 drop-shadow-sm">Journal Your Thoughts</h3>
 
       <div className="mb-6">
         <label htmlFor="journalEntry" className="block text-gray-700 text-sm font-medium mb-2">Write your entry:</label>
         <textarea
           id="journalEntry"
           rows={8}
-          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500 transition duration-200 text-gray-800 placeholder-gray-500"
+          className="w-full px-4 py-2 border-2 border-white/50 bg-white/50 rounded-xl focus:ring-indigo-500 focus:border-indigo-500 transition duration-300 text-gray-800 placeholder-gray-500 shadow-inner"
           placeholder="What's on your mind today? How are you feeling?"
           value={journalContent}
           onChange={(e) => setJournalContent(e.target.value)}
@@ -710,7 +722,7 @@ const JournalTab: React.FC<JournalTabProps> = ({ userId }) => {
 
       <button
         onClick={handleSubmitJournal}
-        className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 px-6 rounded-xl shadow-lg transition-all duration-300 transform hover:-translate-y-1 focus:outline-none focus:ring-4 focus:ring-indigo-300 flex items-center justify-center"
+        className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 px-6 rounded-full shadow-lg transition-all duration-300 transform hover:-translate-y-1 focus:outline-none focus:ring-4 focus:ring-indigo-300 flex items-center justify-center active:scale-95"
         disabled={journalContent.trim() === '' || isSubmittingJournal || isGeneratingInsight}
       >
         {isSubmittingJournal || isGeneratingInsight ? (
@@ -731,7 +743,7 @@ const JournalTab: React.FC<JournalTabProps> = ({ userId }) => {
 
       {/* Journal History */}
       <div className="mt-8">
-        <h4 className="text-xl font-semibold text-gray-800 mb-3">Your Recent Journal Entries</h4>
+        <h4 className="text-xl font-semibold text-gray-800 mb-4 drop-shadow-sm">Your Recent Journal Entries</h4>
         {isLoadingJournals ? (
           <p className="text-gray-500">Loading journal history...</p>
         ) : journalEntries.length === 0 ? (
@@ -739,25 +751,23 @@ const JournalTab: React.FC<JournalTabProps> = ({ userId }) => {
         ) : (
           <div className="space-y-4">
             {journalEntries.map((entry) => (
-              <div key={entry.id} className="bg-gray-50 p-4 rounded-lg shadow-sm border border-gray-200 flex justify-between items-start">
-                <div>
+              <div key={entry.id} className="relative bg-white/50 p-4 rounded-xl shadow-sm border border-white/50 flex flex-col sm:flex-row justify-between items-start transition-all duration-200 hover:shadow-md">
+                <div className="flex-grow">
                   <p className="text-gray-800 font-medium text-sm mb-1">{formatDate(entry.created_at)}</p>
-                  <p className="text-gray-700">{entry.content}</p>
+                  <p className="text-gray-700 font-light">{entry.content}</p>
                   {entry.ai_insight && (
-                    <div className="mt-2 p-3 bg-blue-50 rounded-md text-blue-800 text-sm border border-blue-200">
-                      <p className="font-semibold">AI Insight:</p>
+                    <div className="mt-4 p-3 bg-indigo-50/70 rounded-lg text-indigo-800 text-sm border border-indigo-200 shadow-inner">
+                      <p className="font-semibold flex items-center mb-1 space-x-2"><Zap size={16} /> <span>AI Insight:</span></p>
                       <p>{entry.ai_insight}</p>
                     </div>
                   )}
                 </div>
                 <button
                   onClick={() => handleDeleteJournal(entry.id)}
-                  className="ml-4 bg-red-500 hover:bg-red-600 text-white p-2 rounded-full shadow-md transition-colors duration-200 flex items-center justify-center flex-shrink-0"
+                  className="mt-4 sm:mt-0 sm:ml-4 bg-red-500 hover:bg-red-600 text-white p-2 rounded-full shadow-md transition-colors duration-200 flex items-center justify-center flex-shrink-0 active:scale-95"
                   title="Delete Journal Entry"
                 >
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                    <path fillRule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 011-1h4a1 1 0 110 2H8a1 1 0 01-1-1zm2 3a1 1 0 011-1h4a1 1 0 110 2H10a1 1 0 01-1-1zm-2 3a1 1 0 011-1h4a1 1 0 110 2H8a1 1 0 01-1-1z" clipRule="evenodd" />
-                </svg>
+                  <Trash2 size={16} />
                 </button>
               </div>
             ))}
@@ -806,7 +816,7 @@ const InsightsTab: React.FC<MoodTrackerTabProps> = ({ userId }) => {
 
   return (
     <div className="p-6">
-      <h3 className="text-2xl font-semibold text-gray-800 mb-4">Your AI Insights</h3>
+      <h3 className="text-2xl font-semibold text-gray-800 mb-6 drop-shadow-sm">Your AI Insights</h3>
       {message && (
         <p className={`mt-4 text-center text-sm text-red-600`}>
           {message}
@@ -817,15 +827,15 @@ const InsightsTab: React.FC<MoodTrackerTabProps> = ({ userId }) => {
       ) : allJournalEntries.length === 0 ? (
         <p className="text-gray-500">No AI insights generated yet. Write a journal entry to get started!</p>
       ) : (
-        <div className="space-y-4">
+        <div className="space-y-6">
           {allJournalEntries.map((entry) => (
-            <div key={entry.id} className="bg-white p-4 rounded-lg shadow-sm border border-gray-200">
-              <p className="text-gray-800 font-medium text-sm mb-1">{formatDate(entry.created_at)}</p>
-              <p className="text-gray-700 italic">&quot;{entry.content.substring(0, 100)}...&quot;</p> {/* Show snippet of original entry */}
+            <div key={entry.id} className="relative bg-white/50 p-6 rounded-2xl shadow-sm border border-white/50 transition-all duration-200 hover:shadow-xl">
+              <p className="text-gray-800 font-medium text-sm mb-2">{formatDate(entry.created_at)}</p>
+              <p className="text-gray-700 italic font-light">&quot;{entry.content.length > 100 ? `${entry.content.substring(0, 100)}...` : entry.content}&quot;</p>
               {entry.ai_insight && (
-                <div className="mt-2 p-3 bg-blue-50 rounded-md text-blue-800 text-sm border border-blue-200">
-                  <p className="font-semibold">AI Insight:</p>
-                  <p>{entry.ai_insight}</p>
+                <div className="mt-4 p-4 bg-indigo-50/70 rounded-xl text-indigo-800 text-sm border border-indigo-200 shadow-inner">
+                  <p className="font-semibold flex items-center space-x-2 mb-1"><Zap size={16} /> <span>AI Insight:</span></p>
+                  <p className="font-light">{entry.ai_insight}</p>
                 </div>
               )}
             </div>
@@ -839,11 +849,36 @@ const InsightsTab: React.FC<MoodTrackerTabProps> = ({ userId }) => {
 // --- ResourcesTab Component ---
 const ResourcesTab: React.FC = () => (
   <div className="p-6">
-    <h3 className="text-2xl font-semibold text-gray-800 mb-4">Helpful Resources</h3>
-    <p className="text-gray-600">
-      Find articles, exercises, and external links to support your mental well-being.
-    </p>
-    {/* List of resources will go here */}
+    <h3 className="text-2xl font-semibold text-gray-800 mb-6 drop-shadow-sm">Helpful Resources</h3>
+    <div className="space-y-6">
+      <div className="relative bg-white/50 p-6 rounded-2xl shadow-sm border border-white/50 transition-all duration-200 hover:shadow-xl">
+        <h4 className="text-xl font-bold text-indigo-700 flex items-center space-x-2 mb-2"><BookText size={24} /> <span>Guided Meditations</span></h4>
+        <p className="text-gray-700 font-light leading-relaxed">
+          Discover a variety of guided meditation and mindfulness exercises to help you relax, focus, and find inner peace.
+        </p>
+        <a href="#" className="mt-4 inline-block text-indigo-600 hover:text-indigo-800 font-medium transition-colors duration-200">
+          Explore Meditations &rarr;
+        </a>
+      </div>
+      <div className="relative bg-white/50 p-6 rounded-2xl shadow-sm border border-white/50 transition-all duration-200 hover:shadow-xl">
+        <h4 className="text-xl font-bold text-green-700 flex items-center space-x-2 mb-2"><Leaf size={24} /> <span>Breathing Exercises</span></h4>
+        <p className="text-gray-700 font-light leading-relaxed">
+          Learn simple and effective breathing techniques to manage stress and anxiety in the moment.
+        </p>
+        <a href="#" className="mt-4 inline-block text-green-600 hover:text-green-800 font-medium transition-colors duration-200">
+          Learn More &rarr;
+        </a>
+      </div>
+      <div className="relative bg-white/50 p-6 rounded-2xl shadow-sm border border-white/50 transition-all duration-200 hover:shadow-xl">
+        <h4 className="text-xl font-bold text-purple-700 flex items-center space-x-2 mb-2"><Zap size={24} /> <span>Professional Help</span></h4>
+        <p className="text-gray-700 font-light leading-relaxed">
+          Find information and links to certified mental health professionals and support hotlines.
+        </p>
+        <a href="#" className="mt-4 inline-block text-purple-600 hover:text-purple-800 font-medium transition-colors duration-200">
+          Get Help &rarr;
+        </a>
+      </div>
+    </div>
   </div>
 );
 
