@@ -1,4 +1,4 @@
-Project Title
+MindWell
 A modern, full-stack web application built with a powerful and scalable tech stack. This project serves as a robust starting point for a variety of web applications, featuring secure user authentication, a scalable database, and a dynamic front-end experience.
 
 🚀 Live Demo
