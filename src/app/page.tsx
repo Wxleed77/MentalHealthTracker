@@ -1,6 +1,7 @@
 'use client';
 import React, { useState, useEffect } from 'react';
-import { supabase } from './utils/supabase';
+// Corrected Supabase import path:
+import { supabase } from './utils/supabase'; // Assuming page.tsx is in src/app and utils is in src/app
 import { User } from '@supabase/supabase-js';
 
 // --- Type Definitions ---
@@ -396,7 +397,7 @@ const MoodTrackerTab: React.FC<MoodTrackerTabProps> = ({ userId }) => {
   };
 
   const handleDeleteMood = async (id: string) => {
-    if (!confirm('Are you sure you want to delete this mood entry?')) { // Using confirm for simplicity, replace with custom modal later
+    if (!confirm('Are you sure you want to delete this mood entry?')) {
       return;
     }
 
@@ -406,13 +407,13 @@ const MoodTrackerTab: React.FC<MoodTrackerTabProps> = ({ userId }) => {
         .from('mood_entries')
         .delete()
         .eq('id', id)
-        .eq('user_id', userId); // Ensure only the owner can delete
+        .eq('user_id', userId);
 
       if (error) {
         throw error;
       }
       setMessage('Mood entry deleted successfully!');
-      fetchMoodEntries(); // Re-fetch to update the list
+      fetchMoodEntries();
     } catch (error: unknown) {
       let errorMessage = 'Failed to delete mood entry.';
       if (error instanceof Error) {
@@ -459,7 +460,7 @@ const MoodTrackerTab: React.FC<MoodTrackerTabProps> = ({ userId }) => {
         <textarea
           id="moodNote"
           rows={3}
-          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500 transition duration-200 text-gray-800 placeholder-gray-500" // Added text-gray-800 and placeholder-gray-500
+          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500 transition duration-200 text-gray-800 placeholder-gray-500"
           placeholder="What's on your mind? (e.g., 'Had a great day at work!')"
           value={moodNote}
           onChange={(e) => setMoodNote(e.target.value)}
@@ -510,7 +511,7 @@ const MoodTrackerTab: React.FC<MoodTrackerTabProps> = ({ userId }) => {
                 >
                   <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
                     <path fillRule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 011-1h4a1 1 0 110 2H8a1 1 0 01-1-1zm2 3a1 1 0 011-1h4a1 1 0 110 2H10a1 1 0 01-1-1zm-2 3a1 1 0 011-1h4a1 1 0 110 2H8a1 1 0 01-1-1z" clipRule="evenodd" />
-                  </svg>
+                </svg>
                 </button>
               </div>
             ))}
@@ -532,6 +533,7 @@ const JournalTab: React.FC<JournalTabProps> = ({ userId }) => {
   const [isSubmittingJournal, setIsSubmittingJournal] = useState(false);
   const [journalEntries, setJournalEntries] = useState<JournalEntry[]>([]);
   const [isLoadingJournals, setIsLoadingJournals] = useState(true);
+  const [isGeneratingInsight, setIsGeneratingInsight] = useState(false);
 
   // Function to fetch journal entries
   const fetchJournalEntries = async () => {
@@ -572,22 +574,73 @@ const JournalTab: React.FC<JournalTabProps> = ({ userId }) => {
     setIsSubmittingJournal(true);
     setMessage('');
 
+    let newEntryId: string | null = null;
+
     try {
-      const { error } = await supabase
+      // 1. Save journal entry to Supabase
+      const { data, error } = await supabase
         .from('journal_entries')
         .insert({
           user_id: userId,
           content: journalContent.trim(),
           ai_insight: null,
-        });
+        })
+        .select('id, content'); // Ensure ID and content are selected for the API call
 
       if (error) {
         throw error;
       }
 
-      setMessage('Journal entry saved successfully!');
+      const newEntry = data?.[0];
+      if (!newEntry || !newEntry.id) {
+        throw new Error("Failed to retrieve new journal entry ID after insert.");
+      }
+      newEntryId = newEntry.id;
+
+      setMessage('Journal entry saved successfully! Generating AI insight...');
       setJournalContent('');
-      fetchJournalEntries(); // Re-fetch to update the list
+      fetchJournalEntries(); // Re-fetch to show the new entry immediately (without insight yet)
+
+      // 2. Call Next.js API Route for AI insight generation
+      setIsGeneratingInsight(true);
+
+      try {
+        const response = await fetch('/api/generate-insight', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            id: newEntryId,
+            content: newEntry.content,
+          }),
+        });
+
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(`AI generation API failed: ${errorData.message || response.statusText}`);
+        }
+
+        // AI insight has been generated and updated in Supabase by the API route
+        // We need to re-fetch after a short delay to ensure Supabase has propagated the update
+        // and our client-side cache is invalidated.
+        setTimeout(() => {
+          fetchJournalEntries();
+          setMessage('Journal entry saved and AI insight generated!');
+        }, 1000); // 1-second delay to allow Supabase update to propagate
+
+      } catch (aiError: unknown) {
+        let aiErrorMessage = 'Failed to trigger AI insight generation.';
+        if (aiError instanceof Error) {
+          aiErrorMessage = aiError.message;
+        } else if (typeof aiError === 'object' && aiError !== null && 'message' in aiError) {
+          aiErrorMessage = (aiError as { message: string }).message;
+        }
+        console.error('Error calling AI generation API:', aiErrorMessage);
+        setMessage(`Journal entry saved. AI generation failed: ${aiErrorMessage}`);
+      } finally {
+        setIsGeneratingInsight(false);
+      }
 
     } catch (error: unknown) {
       let errorMessage = 'Failed to save journal entry.';
@@ -604,7 +657,7 @@ const JournalTab: React.FC<JournalTabProps> = ({ userId }) => {
   };
 
   const handleDeleteJournal = async (id: string) => {
-    if (!confirm('Are you sure you want to delete this journal entry?')) { // Using confirm for simplicity, replace with custom modal later
+    if (!confirm('Are you sure you want to delete this journal entry?')) {
       return;
     }
 
@@ -614,13 +667,13 @@ const JournalTab: React.FC<JournalTabProps> = ({ userId }) => {
         .from('journal_entries')
         .delete()
         .eq('id', id)
-        .eq('user_id', userId); // Ensure only the owner can delete
+        .eq('user_id', userId);
 
       if (error) {
         throw error;
       }
       setMessage('Journal entry deleted successfully!');
-      fetchJournalEntries(); // Re-fetch to update the list
+      fetchJournalEntries();
     } catch (error: unknown) {
       let errorMessage = 'Failed to delete journal entry.';
       if (error instanceof Error) {
@@ -647,20 +700,20 @@ const JournalTab: React.FC<JournalTabProps> = ({ userId }) => {
         <textarea
           id="journalEntry"
           rows={8}
-          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500 transition duration-200 text-gray-800 placeholder-gray-500" // Added text-gray-800 and placeholder-gray-500
+          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500 transition duration-200 text-gray-800 placeholder-gray-500"
           placeholder="What's on your mind today? How are you feeling?"
           value={journalContent}
           onChange={(e) => setJournalContent(e.target.value)}
-          disabled={isSubmittingJournal}
+          disabled={isSubmittingJournal || isGeneratingInsight}
         ></textarea>
       </div>
 
       <button
         onClick={handleSubmitJournal}
         className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 px-6 rounded-xl shadow-lg transition-all duration-300 transform hover:-translate-y-1 focus:outline-none focus:ring-4 focus:ring-indigo-300 flex items-center justify-center"
-        disabled={journalContent.trim() === '' || isSubmittingJournal}
+        disabled={journalContent.trim() === '' || isSubmittingJournal || isGeneratingInsight}
       >
-        {isSubmittingJournal ? (
+        {isSubmittingJournal || isGeneratingInsight ? (
           <svg className="animate-spin h-5 w-5 text-white mr-3" viewBox="0 0 24 24">
             <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
             <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
@@ -704,7 +757,7 @@ const JournalTab: React.FC<JournalTabProps> = ({ userId }) => {
                 >
                   <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
                     <path fillRule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 011-1h4a1 1 0 110 2H8a1 1 0 01-1-1zm2 3a1 1 0 011-1h4a1 1 0 110 2H10a1 1 0 01-1-1zm-2 3a1 1 0 011-1h4a1 1 0 110 2H8a1 1 0 01-1-1z" clipRule="evenodd" />
-                  </svg>
+                </svg>
                 </button>
               </div>
             ))}
@@ -715,17 +768,75 @@ const JournalTab: React.FC<JournalTabProps> = ({ userId }) => {
   );
 };
 
-// Placeholder Tabs for Dashboard (unchanged from previous version)
-const InsightsTab: React.FC<MoodTrackerTabProps> = ({ userId }) => (
-  <div className="p-6">
-    <h3 className="text-2xl font-semibold text-gray-800 mb-4">Your AI Insights</h3>
-    <p className="text-gray-600">
-      This section will display personalized insights and suggestions based on your mood and journal entries.
-    </p>
-    {/* AI insights display will go here */}
-  </div>
-);
+// --- InsightsTab Component ---
+const InsightsTab: React.FC<MoodTrackerTabProps> = ({ userId }) => {
+  const [allJournalEntries, setAllJournalEntries] = useState<JournalEntry[]>([]);
+  const [isLoadingAllJournals, setIsLoadingAllJournals] = useState(true);
+  const [message, setMessage] = useState('');
 
+  useEffect(() => {
+    const fetchAllJournalEntries = async () => {
+      setIsLoadingAllJournals(true);
+      // Fetch all journal entries for the user, specifically looking for those with insights
+      const { data, error } = await supabase
+        .from('journal_entries')
+        .select('*')
+        .eq('user_id', userId)
+        .not('ai_insight', 'is', null) // Only fetch entries that have an AI insight
+        .order('created_at', { ascending: false });
+
+      if (error) {
+        console.error('Error fetching all journal entries for insights:', error);
+        setMessage('Failed to load insights.');
+      } else {
+        setAllJournalEntries(data || []);
+      }
+      setIsLoadingAllJournals(false);
+    };
+
+    if (userId) {
+      fetchAllJournalEntries();
+    }
+  }, [userId]);
+
+  const formatDate = (dateString: string) => {
+    const options: Intl.DateTimeFormatOptions = { year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' };
+    return new Date(dateString).toLocaleDateString(undefined, options);
+  };
+
+  return (
+    <div className="p-6">
+      <h3 className="text-2xl font-semibold text-gray-800 mb-4">Your AI Insights</h3>
+      {message && (
+        <p className={`mt-4 text-center text-sm text-red-600`}>
+          {message}
+        </p>
+      )}
+      {isLoadingAllJournals ? (
+        <p className="text-gray-500">Loading insights...</p>
+      ) : allJournalEntries.length === 0 ? (
+        <p className="text-gray-500">No AI insights generated yet. Write a journal entry to get started!</p>
+      ) : (
+        <div className="space-y-4">
+          {allJournalEntries.map((entry) => (
+            <div key={entry.id} className="bg-white p-4 rounded-lg shadow-sm border border-gray-200">
+              <p className="text-gray-800 font-medium text-sm mb-1">{formatDate(entry.created_at)}</p>
+              <p className="text-gray-700 italic">&quot;{entry.content.substring(0, 100)}...&quot;</p> {/* Show snippet of original entry */}
+              {entry.ai_insight && (
+                <div className="mt-2 p-3 bg-blue-50 rounded-md text-blue-800 text-sm border border-blue-200">
+                  <p className="font-semibold">AI Insight:</p>
+                  <p>{entry.ai_insight}</p>
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+};
+
+// --- ResourcesTab Component ---
 const ResourcesTab: React.FC = () => (
   <div className="p-6">
     <h3 className="text-2xl font-semibold text-gray-800 mb-4">Helpful Resources</h3>
